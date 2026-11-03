@@ -6,7 +6,7 @@
  */
 import { obterEstado, situacaoPpa } from "../dados/store.js";
 import { montarShell, barraTitulo, somenteLeitura, perfilAtual, url } from "../shell.js";
-import { esc, chip } from "../ui.js";
+import { esc, chip, criarPaginacao } from "../ui.js";
 import { criarFiltros } from "../filtros.js";
 
 const { estado } = montarShell();
@@ -38,7 +38,15 @@ const anosDe = (p) => {
  * A matriz deixa Situação e Descrição sem componente; escolhi o que o dado pede:
  * a situação é uma lista curta e fechada, e a descrição é prosa.
  */
+// A tabela mostra uma página por vez; filtro e paginação se refazem juntos.
+const refazer = () => {
+    document.getElementById("corpo-lista").innerHTML = linhas();
+    paginacao.atualizar();
+};
+const paginacao = criarPaginacao(refazer);
+
 const filtros = criarFiltros({
+    paginacao,
     livre: { rotulo: "Plano", texto: (p) => p.nome },
     campos: [
         {
@@ -92,7 +100,8 @@ function linhas() {
         }</td></tr>`;
     }
 
-    return ppas
+    return paginacao
+        .fatia(ppas)
         .map(
             (p) => `
         <tr>
@@ -143,10 +152,13 @@ function render() {
                 <tbody id="corpo-lista">${linhas()}</tbody>
             </table>
         </div>
+        ${paginacao.html()}
     </div>`;
 
+    paginacao.ligar();
     filtros.ligar(() => {
-        document.getElementById("corpo-lista").innerHTML = linhas();
+        paginacao.inicio();
+        refazer();
     });
 }
 

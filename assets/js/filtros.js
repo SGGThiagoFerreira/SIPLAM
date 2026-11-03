@@ -43,6 +43,8 @@ const normal = (t) =>
  * @param {string} [cfg.exportar] Nome do arquivo gerado; sem ele, não há botão de exportar.
  * @param {() => string} [cfg.acao] A ação da tela — "Novo…" —, que no Inspinia mora
  *   no cabeçalho do card, junto dos filtros, e não numa faixa acima dele.
+ * @param {object} [cfg.paginacao] A de `criarPaginacao`, quando a tabela é paginada:
+ *   a exportação a desliga enquanto lê, para levar todas as páginas.
  */
 export function criarFiltros(cfg) {
     const campos = (cfg.campos ?? []).filter(Boolean);
@@ -247,9 +249,15 @@ export function criarFiltros(cfg) {
      * Lê a própria tabela, e não os registros: assim o arquivo tem as mesmas
      * linhas, as mesmas colunas e a mesma ordem que a pessoa está vendo — um
      * relatório que diverge da tela é pior que nenhum. A coluna de ações fica
-     * de fora, porque num arquivo ela não é nada.
+     * de fora, porque num arquivo ela não é nada. A paginação é a exceção: o
+     * arquivo leva todas as páginas do filtro, não só a que está à vista.
      */
     function exportar(formato) {
+        if (cfg.paginacao) cfg.paginacao.todas(() => gerar(formato));
+        else gerar(formato);
+    }
+
+    function gerar(formato) {
         const tabela = document.querySelector("#conteudo table");
         if (!tabela) return;
 

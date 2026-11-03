@@ -7,7 +7,7 @@
 import { obterEstado, ppaCorrente } from "../dados/store.js";
 import { APTIDAO_LABEL, DISPONIBILIZACAO_LABEL } from "../dados/regras.js";
 import { montarShell, barraTitulo, somenteLeitura, url } from "../shell.js";
-import { chip, esc, faixaIndicadores } from "../ui.js";
+import { chip, esc, faixaIndicadores, criarPaginacao } from "../ui.js";
 import { criarFiltros, opcoesDe } from "../filtros.js";
 
 const { estado } = montarShell();
@@ -39,7 +39,15 @@ function contribuicoes(programaId) {
  * O filtro espelha a tabela: código e nome no campo livre, e um multisselect
  * para cada coluna que classifica o Programa.
  */
+// A tabela mostra uma página por vez. A faixa de números conta o filtro
+// inteiro, não a página: ela não se refaz quando só a página muda.
+const paginacao = criarPaginacao(() => {
+    document.getElementById("corpo-lista").innerHTML = corpo();
+    paginacao.atualizar();
+});
+
 const filtros = criarFiltros({
+    paginacao,
     livre: { rotulo: "Programa", texto: (p) => `${p.codigo} ${p.nome} ${p.eixo ?? ""} ${p.objetivoEstrategico ?? ""}` },
     campos: [
         {
@@ -110,7 +118,8 @@ function corpo() {
     if (ls.length === 0) {
         return '<tr><td colspan="7" class="text-center text-muted py-4 fs-12">Nenhum Programa corresponde ao filtro.</td></tr>';
     }
-    return ls
+    return paginacao
+        .fatia(ls)
         .map((p) => {
             const falta = faltaParaDisponibilizar(p);
             return `
@@ -160,10 +169,14 @@ function render() {
                 <tbody id="corpo-lista">${corpo()}</tbody>
             </table>
         </div>
+        ${paginacao.html()}
     </div>`;
 
+    paginacao.ligar();
     filtros.ligar(() => {
+        paginacao.inicio();
         document.getElementById("corpo-lista").innerHTML = corpo();
+        paginacao.atualizar();
         document.getElementById("faixa").innerHTML = faixa();
     });
 }
