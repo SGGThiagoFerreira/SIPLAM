@@ -1,4 +1,4 @@
-import { esc } from "../ui.js";
+import { listaResumida } from "../ui.js";
 import { obterEstado, ppaCorrente } from "../dados/store.js";
 
 // A mesma comparação do catálogo: sem caixa, sem acento, sem espaço nas pontas.
@@ -63,12 +63,13 @@ export const eixo = {
         colunas: [
             {
                 rotulo: "Objetivos estratégicos",
-                valor: (item, estado) => {
-                    const total = (estado.objetivos ?? []).filter((o) => o.eixoId === item.id).length;
-                    return total
-                        ? `${total} ${total === 1 ? "objetivo" : "objetivos"}`
-                        : '<span class="text-muted">—</span>';
-                },
+                valor: (item, estado) =>
+                    listaResumida(
+                        (estado.objetivos ?? [])
+                            .filter((o) => o.eixoId === item.id)
+                            .map((o) => o.nome)
+                            .sort((a, b) => a.localeCompare(b, "pt-BR"))
+                    ),
             },
         ],
     },

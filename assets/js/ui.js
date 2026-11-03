@@ -70,6 +70,27 @@ export function esc(valor) {
     );
 }
 
+/**
+ * Lista curta para célula de tabela: o primeiro nome e, havendo mais, um
+ * “+N” que mostra os demais ao passar o mouse. As linhas são redesenhadas a
+ * cada filtro, então o tooltip é delegado do `body` e criado uma vez só.
+ */
+let tooltipDelegado = false;
+export function listaResumida(nomes, vazio = '<span class="text-muted">—</span>') {
+    if (!nomes.length) return vazio;
+    if (!tooltipDelegado && window.bootstrap?.Tooltip) {
+        new bootstrap.Tooltip(document.body, { selector: "[data-lista-mais]", html: true });
+        tooltipDelegado = true;
+    }
+    const [primeiro, ...resto] = nomes;
+    const mais = resto.length
+        ? ` <span class="badge bg-light text-body border ms-1" tabindex="0" data-lista-mais
+              data-bs-placement="top" data-bs-title="${esc(resto.map(esc).join("<br>"))}"
+              aria-label="Mais ${resto.length}: ${esc(resto.join(", "))}">+${resto.length}</span>`
+        : "";
+    return `${esc(primeiro)}${mais}`;
+}
+
 /** Trilha de contexto com separador "›". */
 /* ---------- micro-gráficos ----------
    Uma matiz só e o número sempre ao lado: o verde da marca fica abaixo de 3:1
