@@ -1,4 +1,28 @@
 import { esc } from "../ui.js";
+import { obterEstado, ppaCorrente } from "../dados/store.js";
+
+// A mesma comparação do catálogo: sem caixa, sem acento, sem espaço nas pontas.
+const norm = (v) =>
+    String(v ?? "")
+        .toLocaleLowerCase("pt-BR")
+        .normalize("NFD")
+        .replace(/[̀-ͯ]/g, "")
+        .trim();
+
+/**
+ * Outro eixo do plano corrente com o mesmo nome. As etiquetas pertencem ao
+ * ciclo, então um PPA seguinte pode repetir o nome de um eixo do anterior.
+ */
+function eixoComMesmoNome(dados) {
+    const estado = obterEstado();
+    const plano = ppaCorrente(estado);
+    return (estado.eixos ?? []).find(
+        (e) =>
+            e.id !== dados.id &&
+            (!e.ppaId || !plano || e.ppaId === plano.id) &&
+            norm(e.nome) === norm(dados.nome)
+    );
+}
 
 /**
  * Cadastro de Eixos.
@@ -27,6 +51,15 @@ export const eixo = {
     ],
 
     extra: {
+        // Dois eixos com o mesmo nome seriam o mesmo eixo, cadastrado duas vezes.
+        regras: (dados) => [
+            {
+                campo: "f-nome",
+                valido: !dados.nome || !eixoComMesmoNome(dados),
+                mensagem: "Já possui um eixo cadastrado com mesmo nome",
+            },
+        ],
+
         colunas: [
             {
                 rotulo: "Objetivos estratégicos",
