@@ -131,10 +131,10 @@ export function faisca(valores, rotulo) {
 export const TAMANHOS_PAGINA = [10, 25, 50, 100];
 
 /**
- * Paginação de uma listagem, no markup do Inspinia (`apps-ecommerce-orders`):
- * rodapé do card com "Mostrando X a Y de Z" à esquerda e a `pagination-boxed`
- * à direita. Não é o `custom-table.js` do template porque ele pagina linhas
- * que já estão no DOM, e aqui o corpo da tabela se refaz a cada filtro.
+ * Paginação de uma listagem: no rodapé do card, à direita, o tamanho da página,
+ * "X-Y de Z" e as setas. Não é o `custom-table.js` do template porque ele
+ * pagina linhas que já estão no DOM, e aqui o corpo da tabela se refaz a cada
+ * filtro.
  *
  * Quem lista filtra e ordena; a paginação só corta. O fluxo é:
  *
@@ -166,51 +166,33 @@ export function criarPaginacao(aoMudar, { porPagina = TAMANHOS_PAGINA[0] } = {})
         return lista.slice(de, de + tamanho);
     }
 
-    /** Números com reticências: a primeira, a última e as vizinhas da atual. */
-    function numeros() {
-        const n = paginas();
-        const vistas = [...new Set([1, pagina - 1, pagina, pagina + 1, n])].filter((p) => p >= 1 && p <= n).sort((a, b) => a - b);
-        const saida = [];
-        vistas.forEach((p, i) => {
-            if (i > 0 && p - vistas[i - 1] > 1) saida.push(null);
-            saida.push(p);
-        });
-        return saida;
+    function seta(icone, destino, desabilitado, rotulo) {
+        return `<button type="button" class="btn btn-sm btn-link p-0 lh-1" data-pag-ir="${destino}"
+                    aria-label="${rotulo}" ${desabilitado ? "disabled" : ""}><i class="ti ${icone} fs-16"></i></button>`;
     }
 
-    function item(rotulo, destino, { ativo = false, desabilitado = false, aria = "" } = {}) {
-        return `<li class="page-item ${ativo ? "active" : ""} ${desabilitado ? "disabled" : ""}">
-            <a href="#" class="page-link" data-pag-ir="${destino}" ${aria ? `aria-label="${aria}"` : ""}
-               ${ativo ? 'aria-current="page"' : ""} ${desabilitado ? 'tabindex="-1" aria-disabled="true"' : ""}>${rotulo}</a>
-        </li>`;
-    }
-
+    /**
+     * Uma linha só, discreta e à direita: "Mostrar: 10 ▾   1-10 de 68   ‹ ›".
+     * Sem números de página — com centenas de registros eles viram ruído, e
+     * quem quer ver mais aumenta o tamanho da página.
+     */
     function miolo() {
         // Lista vazia já diz o que tem a dizer no corpo da tabela.
         if (total === 0) return "";
-        const n = paginas();
         const de = (pagina - 1) * tamanho + 1;
         const ate = Math.min(pagina * tamanho, total);
-        return `<div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
-            <div class="d-flex align-items-center gap-2 fs-12 text-muted text-nowrap">
-                <span>Mostrar</span>
-                <select class="form-select form-select-sm flex-shrink-0" style="width:4.5rem" data-pag-tamanho aria-label="Registros por página">
+        return `<div class="paginacao-lista text-muted">
+            <label class="d-flex align-items-center gap-1 mb-0">
+                <span>Mostrar:</span>
+                <select class="form-select form-select-sm" data-pag-tamanho aria-label="Registros por página">
                     ${TAMANHOS_PAGINA.map((t) => `<option value="${t}" ${t === tamanho ? "selected" : ""}>${t}</option>`).join("")}
                 </select>
-                <span class="text-nowrap">por página · mostrando <span class="fw-semibold">${de}</span> a
-                    <span class="fw-semibold">${ate}</span> de <span class="fw-semibold">${total}</span></span>
-            </div>
-            <ul class="pagination pagination-sm pagination-boxed mb-0">
-                ${item('<i class="ti ti-chevron-left"></i>', pagina - 1, { desabilitado: pagina === 1, aria: "Página anterior" })}
-                ${numeros()
-                    .map((p) =>
-                        p === null
-                            ? '<li class="page-item disabled"><span class="page-link">…</span></li>'
-                            : item(p, p, { ativo: p === pagina })
-                    )
-                    .join("")}
-                ${item('<i class="ti ti-chevron-right"></i>', pagina + 1, { desabilitado: pagina === n, aria: "Próxima página" })}
-            </ul>
+            </label>
+            <span>${de}-${ate} de ${total.toLocaleString("pt-BR")}</span>
+            <span class="d-flex align-items-center gap-2">
+                ${seta("ti-chevron-left", pagina - 1, pagina === 1, "Página anterior")}
+                ${seta("ti-chevron-right", pagina + 1, pagina === paginas(), "Próxima página")}
+            </span>
         </div>`;
     }
 
@@ -230,9 +212,8 @@ export function criarPaginacao(aoMudar, { porPagina = TAMANHOS_PAGINA[0] } = {})
         el.addEventListener("click", (e) => {
             const link = e.target.closest("[data-pag-ir]");
             if (!link) return;
-            e.preventDefault();
             const destino = Number(link.dataset.pagIr);
-            if (link.closest(".disabled") || destino === pagina || destino < 1 || destino > paginas()) return;
+            if (link.disabled || destino === pagina || destino < 1 || destino > paginas()) return;
             pagina = destino;
             aoMudar();
         });

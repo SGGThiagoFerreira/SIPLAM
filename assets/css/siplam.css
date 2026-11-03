@@ -583,3 +583,32 @@ tr.linha-clicavel {
 .card[data-plano].border-primary {
     box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
 }
+
+/* Paginação das listagens: uma linha discreta, à direita do rodapé do card. */
+.paginacao-lista {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 1.5rem;
+    font-size: 12px;
+}
+.paginacao-lista .form-select {
+    width: auto;
+    border: 0;
+    background-color: transparent;
+    box-shadow: none;
+    padding: 0 1.25rem 0 0.25rem;
+    background-position: right 0.1rem center;
+    font-size: 12px;
+    color: inherit;
+    cursor: pointer;
+}
+.paginacao-lista .btn-link:disabled {
+    opacity: 0.35;
+}
+.paginacao-lista .btn-link {
+    color: inherit !important;
+}
+.paginacao-lista .btn-link:not(:disabled):hover {
+    opacity: 0.7;
+}
