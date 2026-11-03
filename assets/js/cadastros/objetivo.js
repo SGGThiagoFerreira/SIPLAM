@@ -1,5 +1,29 @@
 import { esc } from "../ui.js";
 import { catalogo } from "../catalogo.js";
+import { obterEstado, ppaCorrente } from "../dados/store.js";
+
+// A mesma comparação do catálogo: sem caixa, sem acento, sem espaço nas pontas.
+const norm = (v) =>
+    String(v ?? "")
+        .toLocaleLowerCase("pt-BR")
+        .normalize("NFD")
+        .replace(/[̀-ͯ]/g, "")
+        .trim();
+
+/**
+ * Outro objetivo do plano corrente com o mesmo nome. Como no eixo, o nome só
+ * precisa ser único dentro do ciclo.
+ */
+function objetivoComMesmoNome(dados) {
+    const estado = obterEstado();
+    const plano = ppaCorrente(estado);
+    return (estado.objetivos ?? []).find(
+        (o) =>
+            o.id !== dados.id &&
+            (!o.ppaId || !plano || o.ppaId === plano.id) &&
+            norm(o.nome) === norm(dados.nome)
+    );
+}
 
 /**
  * Cadastro de Objetivos Estratégicos.
@@ -67,6 +91,11 @@ export const objetivo = {
         // RF6: o eixo é obrigatório. Um objetivo sem eixo não entra na estrutura
         // do plano — ficaria num nível que a lei não tem.
         regras: (dados) => [
+            {
+                campo: "f-nome",
+                valido: !dados.nome || !objetivoComMesmoNome(dados),
+                mensagem: "Já possui um objetivo estratégico cadastrado com mesmo nome",
+            },
             { campo: "eix-busca", valido: !!dados.eixoId, mensagem: "Escolha o eixo a que este objetivo pertence." },
         ],
     },
