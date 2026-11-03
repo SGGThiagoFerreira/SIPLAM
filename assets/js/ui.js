@@ -83,12 +83,14 @@ export function listaResumida(nomes, vazio = '<span class="text-muted">—</span
         tooltipDelegado = true;
     }
     const [primeiro, ...resto] = nomes;
-    const mais = resto.length
-        ? ` <span class="badge bg-light text-body border ms-1" tabindex="0" data-lista-mais
+    if (!resto.length) return esc(primeiro);
+    // O selo vem antes do nome e não quebra de linha separado dele.
+    return `<span class="d-inline-flex align-items-start gap-1">
+        <span class="badge bg-light text-body border flex-shrink-0" tabindex="0" data-lista-mais
               data-bs-placement="top" data-bs-title="${esc(resto.map(esc).join("<br>"))}"
-              aria-label="Mais ${resto.length}: ${esc(resto.join(", "))}">+${resto.length}</span>`
-        : "";
-    return `${esc(primeiro)}${mais}`;
+              aria-label="Mais ${resto.length}: ${esc(resto.join(", "))}">+${resto.length}</span>
+        <span>${esc(primeiro)}</span>
+    </span>`;
 }
 
 /** Trilha de contexto com separador "›". */
