@@ -6,12 +6,11 @@
  * aprova ou reprova, e **é na aprovação que o perfil é escolhido** — o papel é
  * concedido, não pedido.
  *
- * Por isso a tela não edita cadastro: quem aprova confere o que a pessoa
- * declarou e decide. Mudar o nome ou o órgão dela aqui seria decidir sobre um
- * dado que não é nosso.
- *
- * Depois de aprovado, as ações são de acesso, não de cadastro: revogar e
- * reativar. Senha não passa por aqui — quem autentica é o Aplicações Expresso.
+ * Cada linha tem a ação **Editar**, que leva a `central-usuarios/editar.html`.
+ * Lá se mudam o perfil e a situação — é por ela que se inativa quem não deve
+ * mais acessar. Nome, e-mail, login e órgão seguem travados: vêm da base
+ * funcional, e mudá-los aqui seria decidir sobre um dado que não é nosso.
+ * Senha não passa por aqui — quem autentica é o Aplicações Expresso.
  *
  * Há um segundo caminho: o Administrador central pode cadastrar alguém sem
  * esperar a pessoa se registrar. Nesse caso o CPF é consultado na base
@@ -44,7 +43,7 @@ const usuarios = () => estado.usuarios ?? [];
  * Uma solicitação nova entra no fim da lista e, com dezenas de aprovados na
  * frente, some da tela — justamente a linha que exige ação.
  */
-const URGENCIA = { aguardando: 0, aprovado: 1, reprovado: 2 };
+const URGENCIA = { aguardando: 0, aprovado: 1, inativo: 2, reprovado: 3 };
 
 function visiveis() {
     return usuarios()
@@ -104,6 +103,7 @@ function indicadores() {
         [
             { valor: conta("aguardando"), rotulo: "Aguardando aprovação" },
             { valor: conta("aprovado"), rotulo: "Aprovados" },
+            { valor: conta("inativo"), rotulo: "Inativos" },
             { valor: conta("reprovado"), rotulo: "Reprovados" },
         ]
     );
@@ -111,7 +111,7 @@ function indicadores() {
 
 function linha(u) {
     const s = situacaoUsuario(u.situacao);
-    const semAcesso = u.situacao === "reprovado";
+    const semAcesso = u.situacao === "reprovado" || u.situacao === "inativo";
     // Clicar no usuário abre a tela dele, e é lá que se aprova ou reprova. A linha
     // toda é clicável; o nome é um link de verdade, para quem navega pelo teclado.
     const destino = url(`central-usuarios/ver.html?id=${encodeURIComponent(u.id)}`);
@@ -131,6 +131,13 @@ function linha(u) {
             }
         </td>
         <td>${chip(s.rotulo, s.tom)}</td>
+        ${
+            leitura
+                ? ""
+                : `<td class="text-end coluna-acoes">
+            <a href="${url(`central-usuarios/editar.html?id=${encodeURIComponent(u.id)}`)}" class="btn btn-sm btn-outline-primary">Editar</a>
+        </td>`
+        }
     </tr>`;
 }
 
@@ -151,6 +158,7 @@ function render() {
                         <th style="width:16rem">Órgão</th>
                         <th style="width:14rem">Perfil</th>
                         <th style="width:11rem">Situação</th>
+                        ${leitura ? "" : '<th class="text-end coluna-acoes" style="width:7rem">Ações</th>'}
                     </tr>
                 </thead>
                 <tbody id="corpo-lista">${lista.length ? lista.map(linha).join("") : vazio()}</tbody>
@@ -358,7 +366,7 @@ function ligar() {
 }
 
 function vazio() {
-    return `<tr><td colspan="5" class="text-center text-muted py-4 fs-12">
+    return `<tr><td colspan="${leitura ? 5 : 6}" class="text-center text-muted py-4 fs-12">
         ${usuarios().length ? "Nenhum usuário com esse recorte." : "Nenhuma solicitação de acesso."}
     </td></tr>`;
 }

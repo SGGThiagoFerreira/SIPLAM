@@ -1,0 +1,58 @@
+<!doctype html>
+<html
+    lang="pt-BR"
+    data-skin="minimal"
+    data-bs-theme="light"
+    data-topbar-color="light"
+    data-menu-color="gray"
+    data-sidenav-size="default"
+    data-layout-width="fluid"
+    data-layout-position="fixed"
+>
+    <head>
+        <meta charset="utf-8" />
+        <!-- A tela vive numa subpasta; o <base> resolve todo caminho relativo a partir da raiz. -->
+        <base href="../" />
+        <title>Editar usuário | SIPLAM</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="description" content="Edição do perfil e da situação de um usuário do SIPLAM." />
+        <meta name="author" content="Governo do Estado de Goiás" />
+
+        <!-- App favicon -->
+        <link rel="shortcut icon" href="inspinia/assets/images/favicon.ico" />
+
+        <!-- Theme Config Js -->
+        <script src="inspinia/assets/js/config.js"></script>
+
+        <!-- Vendor css -->
+        <link href="inspinia/assets/css/vendors.min.css" rel="stylesheet" type="text/css" />
+
+        <!-- App css -->
+        <link id="app-style" href="inspinia/assets/css/app.min.css" rel="stylesheet" type="text/css" />
+
+        <!-- SIPLAM css -->
+        <link href="assets/css/siplam.css" rel="stylesheet" type="text/css" />
+    </head>
+
+    <body>
+        <div class="wrapper">
+            <div id="shell-topbar"></div>
+            <div id="shell-sidenav"></div>
+
+            <div class="content-page">
+                <div class="container-fluid">
+                    <div id="conteudo"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Vendor js -->
+        <script src="inspinia/assets/js/vendors.min.js"></script>
+
+        <!-- App js -->
+        <script src="inspinia/assets/js/app.js"></script>
+
+        <!-- Tela -->
+        <script type="module" src="assets/js/paginas/central-usuario-editar.js"></script>
+    </body>
+</html>

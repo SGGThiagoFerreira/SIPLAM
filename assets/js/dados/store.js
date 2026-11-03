@@ -112,16 +112,20 @@ function ppasIniciais() {
  * Situações do usuário, na ordem do fluxo.
  *
  *   aguardando → aprovado, ou aguardando → reprovado
- *        ↓
- *    reprovado
+ *                   ↕
+ *                inativo
  *
  * Quem se registra em `registrar.html` entra como **aguardando**, sem perfil.
  * O perfil é escolhido pelo Administrador central no momento da aprovação — é
  * ele que decide o papel, não quem se cadastrou.
+ *
+ * **Inativo** é o aprovado cujo acesso foi suspenso na edição do usuário: sai
+ * do sistema mas guarda os perfis, para voltar a ativo sem nova aprovação.
  */
 export const SITUACOES_USUARIO = [
     { id: "aguardando", rotulo: "Aguardando aprovação", tom: "alerta" },
     { id: "aprovado", rotulo: "Aprovado", tom: "ok" },
+    { id: "inativo", rotulo: "Inativo", tom: "neutro" },
     { id: "reprovado", rotulo: "Reprovado", tom: "impeditivo" },
 ];
 
@@ -592,10 +596,11 @@ function carregar() {
 
     // Estado gravado antes de existir o cadastro de usuários.
     if (!base.usuarios) base.usuarios = usuariosIniciais();
-    // Usuários gravados quando a situação era só "ativo"/"inativo" e não havia login.
+    // Usuários gravados quando a situação era "ativo"/"revogado" e não havia login.
+    // "inativo" não se converte: voltou a existir, como acesso suspenso.
     for (const u of base.usuarios) {
         if (u.situacao === "ativo") u.situacao = "aprovado";
-        if (u.situacao === "inativo" || u.situacao === "revogado") u.situacao = "reprovado";
+        if (u.situacao === "revogado") u.situacao = "inativo";
         if (!u.login) u.login = (u.email ?? "").split("@")[0];
     }
 

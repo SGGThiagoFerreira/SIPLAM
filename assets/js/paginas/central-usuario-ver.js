@@ -129,6 +129,7 @@ function render() {
 
     <div class="mt-1 mb-4 d-flex justify-content-end gap-2 align-items-center">
         <a href="${voltar}" class="btn btn-light">Voltar</a>
+        ${!leitura && !pendente && u.situacao !== "reprovado" ? `<a href="${url(`central-usuarios/editar.html?id=${encodeURIComponent(u.id)}`)}" class="btn btn-outline-primary"><i class="ti ti-pencil me-1"></i>Editar</a>` : ""}
         ${podeReprovar ? '<button type="button" class="btn btn-outline-danger" id="reprovar">Reprovar</button>' : ""}
         ${podeAprovar ? '<button type="button" class="btn btn-primary" id="aprovar">Aprovar</button>' : ""}
     </div>`;
