@@ -1,0 +1,23 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "siplam",
+      "runtimeExecutable": "python",
+      "runtimeArgs": [
+        "servidor.py"
+      ],
+      "port": 8899
+    },
+    {
+      "name": "siplam-8901",
+      "runtimeExecutable": "python",
+      "runtimeArgs": [
+        "servidor.py",
+        "8901"
+      ],
+      "port": 8901,
+      "autoPort": false
+    }
+  ]
+}
