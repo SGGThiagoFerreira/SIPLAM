@@ -1,4 +1,4 @@
-import { esc, chip } from "../ui.js";
+import { esc, chip, listaResumida } from "../ui.js";
 import { campoErro } from "../validacao.js";
 import { catalogo } from "../catalogo.js";
 
@@ -23,6 +23,10 @@ import { catalogo } from "../catalogo.js";
  */
 
 const valor = (id) => document.getElementById(id)?.value.trim() ?? "";
+
+/** Nomes dos itens vinculados, na ordem em que foram escolhidos. */
+const nomesVinculados = (ids, colecao) =>
+    (ids ?? []).map((id) => (colecao ?? []).find((c) => c.id === id)?.nome).filter(Boolean);
 
 /* ---------- catálogos ---------- */
 
@@ -92,20 +96,16 @@ export const problema = {
     ],
 
     extra: {
+        // Os nomes, e não a contagem: com mais de um, o primeiro fica à vista e
+        // os demais no selo "+N", como os objetivos na grid de eixos.
         colunas: [
             {
                 rotulo: "População afetada",
-                valor: (item) => {
-                    const total = (item.populacaoIds ?? []).length;
-                    return total ? `${total} ${total === 1 ? "grupo" : "grupos"}` : '<span class="text-muted">—</span>';
-                },
+                valor: (item, estado) => listaResumida(nomesVinculados(item.populacaoIds, estado.populacoes)),
             },
             {
                 rotulo: "Causas",
-                valor: (item) => {
-                    const total = (item.causaIds ?? []).length;
-                    return total ? `${total} ${total === 1 ? "causa" : "causas"}` : '<span class="text-muted">—</span>';
-                },
+                valor: (item, estado) => listaResumida(nomesVinculados(item.causaIds, estado.causas)),
             },
         ],
 
