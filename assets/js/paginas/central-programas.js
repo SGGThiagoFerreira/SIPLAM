@@ -7,7 +7,7 @@
 import { obterEstado, ppaCorrente } from "../dados/store.js";
 import { APTIDAO_LABEL, DISPONIBILIZACAO_LABEL } from "../dados/regras.js";
 import { montarShell, barraTitulo, somenteLeitura, url } from "../shell.js";
-import { chip, esc, faixaIndicadores, criarPaginacao } from "../ui.js";
+import { chip, esc, faixaIndicadores, criarPaginacao, listaResumida } from "../ui.js";
 import { criarFiltros, opcoesDe } from "../filtros.js";
 
 const { estado } = montarShell();
@@ -31,8 +31,20 @@ function faltaParaDisponibilizar(p) {
     return falta;
 }
 
-function contribuicoes(programaId) {
-    return estado.iniciativas.filter((i) => i.programaId === programaId).length;
+/** Nomes das Iniciativas que os órgãos vincularam ao Programa. */
+function iniciativasDe(programaId) {
+    return estado.iniciativas.filter((i) => i.programaId === programaId).map((i) => i.nome).filter(Boolean);
+}
+
+/**
+ * Nomes das causas do Programa. O cadastro novo guarda `causaIds`, que apontam
+ * para o catálogo; o Programa anterior a ele ainda traz `causas` com o texto.
+ */
+function causasDe(p) {
+    const doCatalogo = (p.causaIds ?? [])
+        .map((id) => (estado.causas ?? []).find((c) => c.id === id)?.nome)
+        .filter(Boolean);
+    return doCatalogo.length ? doCatalogo : (p.causas ?? []).map((c) => c.texto).filter(Boolean);
 }
 
 /**
@@ -112,7 +124,11 @@ function faixa() {
     );
 }
 
-/** Corpo da tabela — ele e a faixa são o que se refaz quando um filtro muda. */
+/**
+ * Corpo da tabela — ele e a faixa são o que se refaz quando um filtro muda.
+ * Causas e Iniciativas mostram os nomes, e não a contagem: com mais de um, o
+ * primeiro fica à vista e os demais no selo "+N", como na grid de problemas.
+ */
 function corpo() {
     const ls = linhas();
     if (ls.length === 0) {
@@ -130,8 +146,8 @@ function corpo() {
                 <div class="fs-12 text-muted">${esc(p.eixo)}</div>
                 ${falta.length ? `<div class="fs-12 text-warning mt-1">Falta: ${esc(falta.join(", "))}</div>` : ""}
             </td>
-            <td class="num">${(p.causas ?? []).length || chip("0", "alerta")}</td>
-            <td class="num">${contribuicoes(p.id) || "—"}</td>
+            <td class="fs-13">${listaResumida(causasDe(p), chip("Nenhuma", "alerta"))}</td>
+            <td class="fs-13">${listaResumida(iniciativasDe(p.id))}</td>
             <td>${chip(APTIDAO_LABEL[p.aptidao ?? "incompleto"], p.aptidao === "apto" ? "ok" : "alerta")}</td>
             <td>${chip(
                 DISPONIBILIZACAO_LABEL[p.disponibilizacao ?? "em_estruturacao"],
@@ -159,8 +175,8 @@ function render() {
                     <tr>
                         <th style="width:5rem">Código</th>
                         <th>Programa</th>
-                        <th class="num" style="width:6rem">Causas</th>
-                        <th class="num" style="width:7rem">Iniciativas</th>
+                        <th style="width:16rem">Causas</th>
+                        <th style="width:14rem">Iniciativas</th>
                         <th style="width:11rem">Aptidão</th>
                         <th style="width:14rem">Disponibilização</th>
                         <th class="text-end coluna-acoes" style="width:7rem">Ações</th>
