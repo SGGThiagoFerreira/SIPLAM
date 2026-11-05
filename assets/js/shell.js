@@ -29,11 +29,12 @@ const MENU_SETORIAL = [
 ];
 
 /**
- * Menu da área central, em módulos.
+ * Menu da área central, em seções.
  *
- * Três níveis, como o Inspinia desenha um menu aninhado: o **módulo**, o
- * **grupo** dentro dele e a **tela**. Hoje há um módulo só — Planejamento —, e o
- * desenho já cabe os que vierem. A Visão Geral e a Visão por Programas saíram do
+ * Dois níveis: a **seção** (Cadastros, Planejamento, Gestão, Relatórios) e a
+ * **tela** dentro dela. Reorganizado em 05/11/2026: as seções subiram para o
+ * primeiro nível e Iniciativas saiu de Cadastros para Planejamento. O desenho
+ * em três níveis (módulo › grupo › tela) continua aceito, se voltar a ser útil. A Visão Geral e a Visão por Programas saíram do
  * menu em 08/10/2026; os endereços delas continuam respondendo.
  *
  * O menu do setorial segue plano: ainda não foi reorganizado.
@@ -42,38 +43,37 @@ const MENU_CENTRAL = [
     { href: "ppa-detalhe.html", rotulo: "Home", icone: "ti-home" },
     { href: "pagina-inicial.html", rotulo: "Dashboard", icone: "ti-layout-dashboard" },
     {
-        modulo: "Planejamento",
+        secao: "Cadastros",
+        icone: "ti-database",
+        itens: [
+            { href: "central-ppa.html", rotulo: "PPA", icone: "ti-calendar-stats" },
+            { href: "central-eixo.html", rotulo: "Eixos", icone: "ti-layout-columns" },
+            { href: "central-objetivo.html", rotulo: "Objetivos Estratégicos", icone: "ti-target-arrow" },
+            { href: "central-causa.html", rotulo: "Causas", icone: "ti-binary-tree" },
+            { href: "central-indicador.html", rotulo: "Indicadores", icone: "ti-chart-dots" },
+            { href: "central-problema.html", rotulo: "Problemas", icone: "ti-alert-triangle" },
+            { href: "central-programas.html", rotulo: "Programa", icone: "ti-layout-grid" },
+        ],
+    },
+    {
+        secao: "Planejamento",
         icone: "ti-clipboard-list",
-        grupos: [
-            {
-                grupo: "Cadastros",
-                icone: "ti-database",
-                itens: [
-                    { href: "central-ppa.html", rotulo: "PPA", icone: "ti-calendar-stats" },
-                    { href: "central-eixo.html", rotulo: "Eixos", icone: "ti-layout-columns" },
-                    { href: "central-objetivo.html", rotulo: "Objetivos Estratégicos", icone: "ti-target-arrow" },
-                    { href: "central-causa.html", rotulo: "Causas", icone: "ti-binary-tree" },
-                    { href: "central-indicador.html", rotulo: "Indicadores", icone: "ti-chart-dots" },
-                    { href: "central-problema.html", rotulo: "Problemas", icone: "ti-alert-triangle" },
-                    { href: "central-programas.html", rotulo: "Programa", icone: "ti-layout-grid" },
-                ],
-            },
-            {
-                grupo: "Gestão",
-                icone: "ti-adjustments",
-                itens: [
-                    { href: "central-usuarios.html", rotulo: "Usuários", icone: "ti-users" },
-                    { href: "central-historico.html", rotulo: "Histórico", icone: "ti-history" },
-                ],
-            },
-            {
-                grupo: "Relatórios",
-                icone: "ti-report-analytics",
-                itens: [
-                    { href: "central-relatorio-lei.html", rotulo: "Relatório final da lei do PPA", icone: "ti-file-text" },
-                    { href: "central-relatorio-finalisticas.html", rotulo: "Relatório consolidado de finalísticas", icone: "ti-report" },
-                ],
-            },
+        itens: [{ href: "central-iniciativas.html", rotulo: "Iniciativas", icone: "ti-list-check" }],
+    },
+    {
+        secao: "Gestão",
+        icone: "ti-adjustments",
+        itens: [
+            { href: "central-usuarios.html", rotulo: "Usuários", icone: "ti-users" },
+            { href: "central-historico.html", rotulo: "Histórico", icone: "ti-history" },
+        ],
+    },
+    {
+        secao: "Relatórios",
+        icone: "ti-report-analytics",
+        itens: [
+            { href: "central-relatorio-lei.html", rotulo: "Relatório final da lei do PPA", icone: "ti-file-text" },
+            { href: "central-relatorio-finalisticas.html", rotulo: "Relatório consolidado de finalísticas", icone: "ti-report" },
         ],
     },
 ];
@@ -86,6 +86,8 @@ function telasDoMenu(menu) {
             for (const g of item.grupos) {
                 for (const tela of g.itens) telas.push({ ...tela, modulo: item.modulo, grupo: g.grupo });
             }
+        } else if (item.secao) {
+            for (const tela of item.itens) telas.push({ ...tela, grupo: item.secao });
         } else if (item.href) {
             telas.push(item);
         }
@@ -466,9 +468,9 @@ function menuDoPerfil(visao) {
     // A gestão de usuários é do Administrador central (RF3). A Alta gestão central
     // faz o mais que ele faz — cadastros, análise —, mas não administra acessos.
     if (perfilDaSessao() === "gestao-central") {
-        return menu.map((item) =>
-            item.modulo ? { ...item, grupos: item.grupos.filter((g) => g.grupo !== "Gestão") } : item
-        );
+        return menu
+            .filter((item) => item.secao !== "Gestão")
+            .map((item) => (item.modulo ? { ...item, grupos: item.grupos.filter((g) => g.grupo !== "Gestão") } : item));
     }
     return menu;
 }
@@ -528,6 +530,38 @@ function modulo(item, atual) {
 }
 
 /**
+ * Uma seção do primeiro nível, com as telas dentro. Abre sozinha quando a tela
+ * aberta mora nela; as outras ficam fechadas.
+ */
+function secaoDoMenu(item, atual) {
+    const id = `menu-${item.secao.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "-")}`;
+    const aberto = item.itens.some((tela) => tela.href === atual);
+    return `
+            <li class="side-nav-item">
+                <a data-bs-toggle="collapse" href="#${id}" aria-expanded="${aberto}" aria-controls="${id}" class="side-nav-link${aberto ? "" : " collapsed"}">
+                    <span class="menu-icon"><i class="ti ${item.icone}"></i></span>
+                    <span class="menu-text">${item.secao}</span>
+                    <span class="menu-arrow"></span>
+                </a>
+                <div class="collapse${aberto ? " show" : ""}" id="${id}">
+                    <ul class="sub-menu">
+                        ${item.itens
+                            .map(
+                                (tela) => `
+                        <li class="side-nav-item">
+                            <a href="${url(tela.href)}" class="side-nav-link${tela.href === atual ? " active" : ""}">
+                                <span class="menu-icon"><i class="ti ${tela.icone}"></i></span>
+                                <span class="menu-text">${tela.rotulo}</span>
+                            </a>
+                        </li>`
+                            )
+                            .join("")}
+                    </ul>
+                </div>
+            </li>`;
+}
+
+/**
  * Mantém a seta de cada grupo de acordo com o grupo.
  *
  * Ao carregar, o template tira o `show` de tudo e reabre os grupos da tela atual
@@ -561,6 +595,7 @@ function sidenav(visao) {
     const itens = menu
         .map((item) => {
             if (item.modulo) return modulo(item, atual);
+            if (item.secao) return secaoDoMenu(item, atual);
             if (item.grupo !== undefined) return `<li class="side-nav-title">${item.grupo}</li>`;
             const ativo = item.href === atual ? " active" : "";
             return `
@@ -733,11 +768,13 @@ export function trilha(elos = []) {
 
     // O módulo e o grupo não são páginas: entram na trilha como texto, sem link.
     // As telas soltas do menu — Home, Dashboard — não moram em módulo nenhum: a trilha é só o nome delas.
-    const solta = central && telaDoMenu && !telaDoMenu.modulo;
+    const solta = central && telaDoMenu && !telaDoMenu.grupo;
     const caminho = solta
         ? []
         : central
-          ? [{ rotulo: telaDoMenu?.modulo ?? "Planejamento" }, ...(telaDoMenu ? [{ rotulo: telaDoMenu.grupo }] : [])]
+          ? telaDoMenu
+              ? [...(telaDoMenu.modulo ? [{ rotulo: telaDoMenu.modulo }] : []), { rotulo: telaDoMenu.grupo }]
+              : [{ rotulo: "Planejamento" }]
           : [{ rotulo: "Programas", href: "programas.html" }];
 
     const doMenu = telaDoMenu?.rotulo;
